@@ -1,10 +1,15 @@
 import type React from "react"
 import "@/app/globals.css"
-import ThemeProvider from "@/components/theme-provider"
+import { Inter } from "next/font/google"
+import { ThemeProvider } from "@/components/theme-provider"
+import Navbar from "@/components/navbar"
+import Footer from "@/components/footer"
+
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "SignLearn - Learn Sign Language Interactively",
-  description: "Master sign language through real-time feedback and interactive lessons.",
+  title: "Sign Language for Kids",
+  description: "Learn sign language alphabet in a fun, interactive way",
 }
 
 export default function RootLayout({
@@ -13,14 +18,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className="dark">
-      <body className="min-h-screen bg-background font-sans antialiased">
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
-          <div className="relative flex min-h-screen flex-col">
-            <div className="flex-1">
-              {children}
-            </div>
-          </div>
+    <html lang="en" className="dark">
+      <body className={`${inter.className} bg-gray-950 text-gray-100`}>
+        <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark">
+          <Navbar />
+          {children}
+          <Footer />
         </ThemeProvider>
       </body>
     </html>

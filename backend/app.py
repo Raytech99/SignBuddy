@@ -172,22 +172,50 @@ def detect_letter():
 
 @app.route('/api/detect', methods=['POST'])
 def detect_sign():
+    logger.info("Received detect request")
     try:
-        # Get the image data from the request
-        image_data = request.json.get('image')
-        if not image_data:
-            return jsonify({'error': 'No image data provided'}), 400
-
-        # Process the image and get prediction
-        letter, confidence = classifier.predict(image_data)
+        # Get image data from request
+        data = request.get_json()
+        if not data or 'image' not in data:
+            return jsonify({'success': False, 'error': 'No image data provided'})
+            
+        image_data = data['image']
+        
+        # Convert base64 image to numpy array
+        encoded_data = image_data.split(',')[1]
+        nparr = np.frombuffer(base64.b64decode(encoded_data), np.uint8)
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        # Flip the frame horizontally before detection
+        frame = cv2.flip(frame, 1)
+        
+        # Detect hands and get landmarks
+        frame, landmarks = detector.detect_hands(frame)
+        
+        if landmarks is None:
+            logger.info("No hand detected")
+            return jsonify({
+                'success': False,
+                'error': 'No hand detected'
+            })
+        
+        # Recognize sign
+        sign, confidence = classifier.recognize_sign(landmarks)
+        logger.info(f"Detected sign: {sign} with confidence: {confidence}")
         
         return jsonify({
-            'letter': letter,
-            'confidence': confidence
+            'success': True,
+            'letter': sign,
+            'confidence': float(confidence) if confidence else 0.0
         })
+        
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Error in detect_sign: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 3001))
     app.run(host='0.0.0.0', port=port) 

@@ -1,22 +1,32 @@
-import React, { FC, ReactNode } from "react";
+"use client";
 
-interface ThemeProviderProps {
-  children: ReactNode;
-  attribute?: string;
-  defaultTheme?: string;
-  enableSystem?: boolean;
-  disableTransitionOnChange?: boolean;
+import React, { createContext, useContext, useState } from 'react';
+
+// Define the shape of your theme context
+interface ThemeContextType {
+    theme: string;
+    setTheme: (theme: string) => void;
 }
 
-const ThemeProvider: FC<ThemeProviderProps> = ({
-  children,
-  attribute,
-  defaultTheme,
-  enableSystem,
-  disableTransitionOnChange,
-}) => {
-  // Implement your theme logic here.
-  return <div>{children}</div>;
+// Create the context
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+// Create a provider component
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [theme, setTheme] = useState<string>('light'); // Default theme
+
+    return (
+        <ThemeContext.Provider value={{ theme, setTheme }}>
+            {children}
+        </ThemeContext.Provider>
+    );
 };
 
-export default ThemeProvider;
+// Custom hook to use the ThemeContext
+export const useTheme = () => {
+    const context = useContext(ThemeContext);
+    if (context === undefined) {
+        throw new Error('useTheme must be used within a ThemeProvider');
+    }
+    return context;
+}; 

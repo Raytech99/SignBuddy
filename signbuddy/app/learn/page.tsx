@@ -1,116 +1,169 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { CameraFeed } from '@/components/camera-feed'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
-import { ChevronLeft, Play } from 'lucide-react'
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { ChevronLeft, ChevronRight, VolumeIcon as VolumeUp } from "lucide-react"
 
-const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
-const CONFIDENCE_THRESHOLD = 0.85
+const alphabet = [
+  { letter: "A", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "B", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "C", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "D", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "E", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "F", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "G", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "H", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "I", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "J", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "K", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "L", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "M", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "N", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "O", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "P", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "Q", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "R", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "S", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "T", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "U", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "V", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "W", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "X", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "Y", image: "/placeholder.svg?height=300&width=300" },
+  { letter: "Z", image: "/placeholder.svg?height=300&width=300" },
+]
 
 export default function LearnPage() {
-  const [detectedLetter, setDetectedLetter] = useState<string | null>(null)
-  const [confidence, setConfidence] = useState(0)
-  const [isStarted, setIsStarted] = useState(false)
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [viewMode, setViewMode] = useState<"single" | "all">("single")
 
-  // Clean up camera when leaving page
-  useEffect(() => {
-    return () => {
-      setIsStarted(false)
-    }
-  }, [])
+  const currentLetter = alphabet[currentIndex]
 
-  const handleDetection = (letter: string, detectionConfidence: number) => {
-    // Only show letters with high confidence
-    if (!letter || detectionConfidence < 0.75) {
-      setDetectedLetter(null)
-      setConfidence(0)
-      return
+  const goToPrevious = () => {
+    setCurrentIndex((prev) => (prev === 0 ? alphabet.length - 1 : prev - 1))
+  }
+
+  const goToNext = () => {
+    setCurrentIndex((prev) => (prev === alphabet.length - 1 ? 0 : prev + 1))
+  }
+
+  const speakLetter = (letter: string) => {
+    if ("speechSynthesis" in window) {
+      const utterance = new SpeechSynthesisUtterance(letter)
+      window.speechSynthesis.speak(utterance)
     }
-    
-    setDetectedLetter(letter)
-    setConfidence(detectionConfidence * 100)
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="container mx-auto px-4 py-8">
-        <Link 
-          href="/" 
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6"
-        >
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          Back to Home
-        </Link>
-        <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
-          <div className="space-y-6">
-            <Card className="p-6">
-              <div className="mb-4">
-                <h2 className="text-2xl font-bold">Practice Sign Language</h2>
-              </div>
-              <div className="max-w-3xl mx-auto">
-                {!isStarted ? (
-                  <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                    <Button 
-                      size="lg"
-                      onClick={() => setIsStarted(true)}
-                      className="gap-2"
-                    >
-                      <Play className="h-5 w-5" />
-                      Start Practice
-                    </Button>
-                  </div>
-                ) : (
-                  <CameraFeed 
-                    onDetection={handleDetection}
-                    className="aspect-video bg-muted shadow-sm rounded-lg"
-                  />
-                )}
-              </div>
-            </Card>
-          </div>
+    <main className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 py-12">
+      <div className="container mx-auto px-4">
+        <h1 className="text-4xl md:text-5xl font-bold text-center text-blue-300 mb-8">Learn Sign Language Alphabet</h1>
 
-          <div className="space-y-6">
-            <Card className="p-6">
-              <h3 className="text-xl font-semibold mb-4">Detected Letter</h3>
-              <div className={`flex items-center justify-center h-32 text-6xl font-bold transition-all duration-200
-                ${confidence > CONFIDENCE_THRESHOLD * 100 
-                  ? "text-green-700 dark:text-green-400" 
-                  : ""}`}
-              >
-                {!isStarted ? "?" : (detectedLetter || '?')}
-              </div>
-              {detectedLetter && isStarted && (
-                <div className="mt-4 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    Confidence: {confidence.toFixed(1)}%
-                  </p>
-                </div>
-              )}
-            </Card>
-
-            <Card className="p-6">
-              <h3 className="text-xl font-semibold mb-4">ASL Alphabet</h3>
-              <div className="grid grid-cols-6 gap-2 sm:grid-cols-9">
-                {ALPHABET.map((letter) => (
-                  <div
-                    key={letter}
-                    className={`flex items-center justify-center h-10 w-10 rounded-md border text-center font-medium transition-all duration-200
-                      ${letter === detectedLetter && confidence > CONFIDENCE_THRESHOLD * 100
-                        ? "bg-green-100 text-green-700 border-green-300 shadow-sm dark:bg-green-900/30 dark:text-green-400 dark:border-green-800" 
-                        : "bg-muted text-muted-foreground"}`}
-                  >
-                    {letter}
-                  </div>
-                ))}
-              </div>
-            </Card>
+        <div className="flex justify-center mb-6">
+          <div className="flex space-x-4">
+            <Button
+              onClick={() => setViewMode("single")}
+              variant={viewMode === "single" ? "default" : "outline"}
+              className={`rounded-full ${viewMode === "single" ? "bg-blue-800 text-blue-200 border-blue-700" : "text-gray-300 border-gray-700 hover:bg-gray-800"}`}
+            >
+              Learn One by One
+            </Button>
+            <Button
+              onClick={() => setViewMode("all")}
+              variant={viewMode === "all" ? "default" : "outline"}
+              className={`rounded-full ${viewMode === "all" ? "bg-blue-800 text-blue-200 border-blue-700" : "text-gray-300 border-gray-700 hover:bg-gray-800"}`}
+            >
+              See All Letters
+            </Button>
           </div>
         </div>
-      </main>
-    </div>
+
+        {viewMode === "single" ? (
+          <div className="max-w-2xl mx-auto">
+            <Card className="bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-700">
+              <CardContent className="p-0">
+                <div className="flex flex-col items-center p-6">
+                  <div className="text-9xl font-bold text-pink-300 mb-4">{currentLetter.letter}</div>
+
+                  <div className="relative mb-6">
+                    <img
+                      src={currentLetter.image || "/placeholder.svg"}
+                      alt={`Sign for letter ${currentLetter.letter}`}
+                      className="rounded-lg shadow-md"
+                    />
+                  </div>
+
+                  <Button
+                    onClick={() => speakLetter(currentLetter.letter)}
+                    className="mb-4 bg-purple-800 hover:bg-purple-700 text-purple-200 border border-purple-700"
+                  >
+                    <VolumeUp className="mr-2 h-5 w-5" />
+                    Hear Letter
+                  </Button>
+
+                  <div className="flex justify-between w-full mt-4">
+                    <Button
+                      onClick={goToPrevious}
+                      variant="outline"
+                      size="lg"
+                      className="flex items-center text-gray-300 border-gray-700 hover:bg-gray-700"
+                    >
+                      <ChevronLeft className="mr-2 h-5 w-5" />
+                      Previous
+                    </Button>
+                    <Button
+                      onClick={goToNext}
+                      variant="outline"
+                      size="lg"
+                      className="flex items-center text-gray-300 border-gray-700 hover:bg-gray-700"
+                    >
+                      Next
+                      <ChevronRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-center mt-6">
+              <div className="flex space-x-2">
+                {alphabet.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentIndex(index)}
+                    className={`w-3 h-3 rounded-full ${index === currentIndex ? "bg-pink-400" : "bg-gray-600"}`}
+                    aria-label={`Go to letter ${alphabet[index].letter}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {alphabet.map((item, index) => (
+              <Card
+                key={index}
+                className="bg-gray-800 hover:shadow-lg transition-shadow cursor-pointer border border-gray-700"
+                onClick={() => {
+                  setCurrentIndex(index)
+                  setViewMode("single")
+                }}
+              >
+                <CardContent className="p-4 flex flex-col items-center">
+                  <div className="text-4xl font-bold text-pink-300 mb-2">{item.letter}</div>
+                  <img
+                    src={item.image || "/placeholder.svg"}
+                    alt={`Sign for letter ${item.letter}`}
+                    className="rounded-lg w-full"
+                  />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </main>
   )
 }
 
