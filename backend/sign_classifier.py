@@ -3,6 +3,12 @@ from sklearn.preprocessing import StandardScaler
 import json
 import os
 import pickle
+import logging
+import shutil
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class SignClassifier:
     def __init__(self):
@@ -143,41 +149,37 @@ class SignClassifier:
             print(f"Error adding reference sign: {str(e)}")
             return False
             
-    def recognize_sign(self, landmarks, threshold=0.65):
-        """Recognize a sign based on current hand pose"""
-        try:
-            # Early returns for invalid cases
-            if landmarks is None:
-                return None, 0.0
-                
-            if not self.sign_references:
-                return None, 0.0
-                
-            current_pose = self.preprocess_landmarks(landmarks)
-            if current_pose is None:
-                return None, 0.0
-                
-            # Compare with all reference signs
-            best_match = None
-            highest_similarity = -1
+    def recognize_sign(self, landmarks):
+        if not self.sign_references:
+            return None, 0.0
             
-            for sign_name, reference_pose in self.sign_references.items():
-                # Convert stored reference back to numpy array
-                reference_pose = np.array(reference_pose)
-                # Calculate cosine similarity
-                similarity = np.dot(current_pose, reference_pose) / (
-                    np.linalg.norm(current_pose) * np.linalg.norm(reference_pose)
-                )
-                
-                if similarity > highest_similarity:
-                    highest_similarity = similarity
-                    best_match = sign_name
-                    
-            # Return the matched sign if similarity is above threshold
-            if highest_similarity >= threshold:
-                return best_match, highest_similarity
-            return None, highest_similarity
+        processed_landmarks = self.preprocess_landmarks(landmarks)
+        if processed_landmarks is None:
+            return None, 0.0
+        
+        best_match = None
+        best_score = float('inf')
+        
+        # Compare with reference signs
+        for letter, ref_features in self.sign_references.items():
+            # Convert stored reference back to numpy array if needed
+            ref_array = np.array(ref_features)
             
-        except Exception as e:
-            print(f"Error during sign recognition: {str(e)}")
-            return None, 0.0 
+            # Simple Euclidean distance as a similarity measure
+            distance = np.linalg.norm(processed_landmarks - ref_array)
+            
+            if distance < best_score:
+                best_score = distance
+                best_match = letter
+        
+        # Convert score to a confidence value (0-1)
+        # Lower distance = higher confidence
+        threshold = 10.0  # Adjust based on your calibration
+        confidence = max(0, min(1, 1 - (best_score / threshold)))
+        
+        # Only return the recognized sign if confidence is above a threshold
+        confidence_threshold = 0.5  # Adjust as needed
+        if confidence < confidence_threshold:
+            return None, 0.0
+            
+        return best_match, confidence 

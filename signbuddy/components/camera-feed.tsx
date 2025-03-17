@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { detectSign } from '../lib/api';
 import { Button } from './ui/button';
 
 interface CameraFeedProps {
@@ -18,7 +17,6 @@ export function CameraFeed({ onDetection, className = '' }: CameraFeedProps) {
 
     async function setupCamera() {
       try {
-        console.log('Requesting camera access...');
         stream = await navigator.mediaDevices.getUserMedia({
           video: { 
             facingMode: 'user',
@@ -28,7 +26,6 @@ export function CameraFeed({ onDetection, className = '' }: CameraFeedProps) {
         });
         
         if (videoRef.current) {
-          console.log('Camera access granted, setting up video stream');
           videoRef.current.srcObject = stream;
           videoRef.current.onloadedmetadata = () => {
             videoRef.current?.play().then(() => {
@@ -44,7 +41,6 @@ export function CameraFeed({ onDetection, className = '' }: CameraFeedProps) {
             setError('Video element encountered an error');
           };
         } else {
-          console.error('Video element reference not found');
           setError('Failed to initialize video element');
         }
       } catch (err) {
@@ -60,11 +56,9 @@ export function CameraFeed({ onDetection, className = '' }: CameraFeedProps) {
     setupCamera();
 
     return () => {
-      console.log('Cleaning up camera stream');
       if (stream) {
         stream.getTracks().forEach(track => {
           track.stop();
-          console.log('Camera track stopped');
         });
       }
     };
@@ -117,14 +111,12 @@ export function CameraFeed({ onDetection, className = '' }: CameraFeedProps) {
     let interval: NodeJS.Timeout;
 
     if (isStreaming) {
-      console.log('Starting frame capture interval');
       interval = setInterval(captureFrame, 1000); // Check every second
     }
 
     return () => {
       if (interval) {
         clearInterval(interval);
-        console.log('Frame capture interval cleared');
       }
     };
   }, [isStreaming]);

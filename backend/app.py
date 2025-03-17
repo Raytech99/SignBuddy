@@ -155,6 +155,11 @@ def detect_letter():
         
         # Recognize sign
         sign, confidence = classifier.recognize_sign(landmarks)
+        
+        # Ensure consistent uppercase for letter responses
+        if sign:
+            sign = sign.upper()
+            
         logger.info(f"Detected sign: {sign} with confidence: {confidence}")
         
         return jsonify({
@@ -177,6 +182,7 @@ def detect_sign():
         # Get image data from request
         data = request.get_json()
         if not data or 'image' not in data:
+            logger.error("No image data provided")
             return jsonify({'success': False, 'error': 'No image data provided'})
             
         image_data = data['image']
@@ -201,6 +207,11 @@ def detect_sign():
         
         # Recognize sign
         sign, confidence = classifier.recognize_sign(landmarks)
+        
+        # Ensure consistent uppercase for letter responses
+        if sign:
+            sign = sign.upper()
+            
         logger.info(f"Detected sign: {sign} with confidence: {confidence}")
         
         return jsonify({

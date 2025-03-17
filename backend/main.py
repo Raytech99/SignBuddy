@@ -7,11 +7,20 @@ def main():
     detector = SignLanguageDetector()
     classifier = SignClassifier()
     
-    # Initialize video capture
-    cap = cv2.VideoCapture(0)
+    # Try different camera indices to find the MacBook camera
+    camera_index = 1  # Try index 1 first (usually external camera)
+    cap = cv2.VideoCapture(camera_index)
+    
+    # If camera 1 doesn't work, try camera 0
+    if not cap.isOpened():
+        camera_index = 0
+        cap = cv2.VideoCapture(camera_index)
+        
     if not cap.isOpened():
         print("Error: Could not open camera")
         return
+    
+    print(f"\nUsing camera index: {camera_index}")
     
     # Application state
     calibration_mode = False
